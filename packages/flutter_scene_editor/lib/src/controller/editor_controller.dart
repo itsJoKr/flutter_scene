@@ -159,6 +159,12 @@ class EditorController extends ChangeNotifier {
     String? baseDirectory,
     FsceneComponentRegistry? componentRegistry,
   }) async {
+    // Document realization can build environments and other GPU-backed
+    // resources that resolve shaders immediately. A freshly constructed
+    // Scene starts static-resource initialization, but does not await it, so
+    // opening the first document after launch can otherwise race the base
+    // shader bundle load and fail while a second attempt succeeds.
+    await Scene.initializeStaticResources();
     // The global look lives in an environment resource the stage references.
     // Guarantee one exists (a studio default for an imported or legacy scene
     // that has none), so the look is always editable through the resource path.
