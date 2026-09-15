@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+app_dir="$(cd -- "$script_dir/.." && pwd)"
+repo_root="$(cd -- "$app_dir/../.." && pwd)"
+name_patch="$script_dir/patches/window_names_stable.patch"
+patch_applied=false
+
+cleanup() {
+  if [[ "$patch_applied" == true ]]; then
+    git -C "$repo_root" apply -R "$name_patch"
+  fi
+}
+
+trap cleanup EXIT
+
+if git -C "$repo_root" apply --check "$name_patch"; then
+  git -C "$repo_root" apply "$name_patch"
+  patch_applied=true
+elif git -C "$repo_root" apply -R --check "$name_patch"; then
+  echo "The stable windowing compatibility patch is already applied."
+  echo "It will be left in place when the editor exits."
+else
+  echo "Unable to apply the stable windowing compatibility patch." >&2
+  echo "Check for overlapping edits in the editor source and try again." >&2
+  exit 1
+fi
+
+cd "$app_dir"
+fvm flutter run -d macos --enable-flutter-gpu "$@"
