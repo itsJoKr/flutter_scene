@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+app_dir="$(cd -- "$script_dir/.." && pwd)"
+
+cd "$app_dir"
+exec fvm flutter run -d macos --enable-flutter-gpu "$@"
